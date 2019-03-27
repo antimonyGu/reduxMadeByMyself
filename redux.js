@@ -1,93 +1,36 @@
-function createStore(reducer, initState) {
-    
-    let state = initState
-    let listeners  = []
-    function getState() {
-      return state
+let createStore = (reducer) => {
+    let state;
+    //获取状态对象
+    //存放所有的监听函数
+    let listeners = [];
+    let getState = () => state;
+    //提供一个方法供外部调用派发action
+    let dispath = (action) => {
+        //调用管理员reducer得到新的state
+        state = reducer(state, action);
+        //执行所有的监听函数
+        listeners.forEach((l) => l())
     }
-    
-    function dispatch(action) {
-      state = reducer(state, action)
-  
-      listeners.forEach(listener => listener())
+    //订阅状态变化事件，当状态改变发生之后执行监听函数
+    let subscribe = (listener) => {
+        listeners.push(listener);
     }
-    
-    function subscribe(listener) {
-      listeners.push(listener)
-    }
-    
+    dispath();
     return {
-      getState,
-      dispatch,
-      subscribe
+        getState,
+        dispath,
+        subscribe
     }
-  }
-  
-  function combineReducers(reducerObj) {
-  
-    return function (state = {}, action) {
-      let newState = {}
-      for(let key in reducerObj) {
-        let reducer = reducerObj[key]
-        newState[key] = reducer(state[key], action)
-      }
-      return newState
+}
+let combineReducers=(renducers)=>{
+    //传入一个renducers管理组，返回的是一个renducer
+    return function(state={},action={}){
+        let newState={};
+        for(var attr in renducers){
+            newState[attr]=renducers[attr](state[attr],action)
+
+        }
+        return newState;
     }
-  }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  let initCounter = {
-    number: 100
-  }
-  
-  let counterReducer = (state = initCounter, action) => {
-    switch (action.type) {
-      case 'PLUS':
-        return { number: state.number + 1 }
-      case 'MINUS':
-        return { number: state.number - 1 }
-      default:
-        return state
-    }
-  }
-  
-  
-  let initPerson = {
-    name: 'hunger',
-    age: 4
-  }
-  let personReducer = (state = initPerson, action) => {
-    switch (action.type) {
-      case 'SET_NAME':
-        return { ...state, name: action.name }
-      case 'SET_AGE':
-        return { ...state, age: action.age }
-      default:
-        return state
-    }
-  }
-  
-  const reducer = combineReducers({ counter: counterReducer, person: personReducer })
-  
-  let store = createStore(reducer)
-  
-  
-  store.subscribe(() => {
-    let state = store.getState()
-    console.log(state)
-  })
-  
-  store.dispatch({type: 'PLUS'})
-  store.dispatch({type: 'MINUS'})
-  store.dispatch({type: 'SET_NAME', name: 'jirengu'})
+}
+export {createStore,combineReducers};
